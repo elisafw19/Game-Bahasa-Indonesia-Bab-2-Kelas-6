@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Petualangan Sastra Nusantara: Jelajah Cerita Rakyat & Makna Kata</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        nunito: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            amber: '#FF9F1C',
+                            teal: '#2EC4B6',
+                            rose: '#E71D36',
+                            navy: '#011627',
+                            yellow: '#FFBF00',
+                            purple: '#7209B7',
+                            lightBg: '#F4F7F6'
+                        }
+                    },
+                    boxShadow: {
+                        '3d': '0 8px 0px 0px rgba(0,0,0,0.25)',
+                        '3d-active': '0 2px 0px 0px rgba(0,0,0,0.25)',
+                        'card': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .font-heading {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Drag & Drop Visual State */
+        .draggable-card {
+            cursor: grab;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+        }
+
+        .draggable-card:active, .draggable-card.dragging {
+            cursor: grabbing;
+            transform: scale(1.03) rotate(1deg);
+            z-index: 50;
+            opacity: 0.9;
+        }
+
+        .draggable-card.selected-tap {
+            ring: 6px solid #FFBF00;
+            transform: scale(1.02);
+            border-color: #FFBF00 !important;
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(255, 191, 0, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 191, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 191, 0, 0); }
+        }
+
+        .dropzone-active {
+            border-color: #3B82F6 !important;
+            background-color: rgba(59, 130, 246, 0.15) !important;
+            transform: scale(1.02);
+        }
+
+        /* Custom Shake Animation for Wrong Answer */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-12px); }
+            40%, 80% { transform: translateX(12px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        /* Scale Pop Animation for Success */
+        @keyframes popSuccess {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .animate-pop {
+            animation: popSuccess 0.4s ease-out forwards;
+        }
+
+        /* Custom Timer Bar Smooth Transition */
+        #timer-bar {
+            transition: width 1s linear, background-color 0.5s ease;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-2 md:p-4 text-slate-100">
+
+    <div id="app-container" class="w-full max-w-6xl aspect-[16/9] min-h-[600px] bg-slate-900/90 backdrop-blur-md rounded-3xl border-4 border-amber-400/40 shadow-2xl overflow-hidden flex flex-col justify-between relative">
+
+        <!-- ========================================================================= -->
+        <!-- SCREEN 1: COVER / HOMESCREEN -->
+        <!-- ========================================================================= -->
+        <div id="screen-home" class="w-full h-full flex flex-col justify-between p-6 md:p-10 relative z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-900 to-black">
+            <div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            
+            <div class="flex justify-between items-center z-10">
+                <span class="bg-amber-500/20 border-2 border-amber-400 text-amber-300 font-bold px-4 py-2 rounded-full text-sm md:text-base flex items-center gap-2">
+                    🎓 Bahasa Indonesia - Kelas 6 SD
+                </span>
+                <button id="btn-sound-toggle-home" onclick="toggleAudio()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 p-3 rounded-2xl border-2 border-slate-600 transition flex items-center justify-center shadow-lg">
+                    <span id="sound-icon-home" class="text-2xl">🔊</span>
+                </button>
+            </div>
+
+            <div class="text-center my-auto z-10 max-w-4xl mx-auto space-y-4">
+                <div class="inline-block bg-teal-500/20 border border-teal-400/50 text-teal-300 px-4 py-1 rounded-full text-sm font-bold tracking-wide uppercase mb-2">
+                    Interactive Touchscreen Game
+                </div>
+                <h1 class="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 drop-shadow-md leading-tight">
+                    PETUALANGAN SASTRA NUSANTARA
+                </h1>
+                <p class="font-heading text-xl md:text-2xl text-teal-200 font-semibold">
+                    Jelajah Cerita Rakyat & Makna Kata
+                </p>
+
+                <div class="bg-slate-800/80 border-2 border-amber-400/40 p-4 md:p-6 rounded-2xl shadow-xl max-w-2xl mx-auto mt-6">
+                    <p class="text-slate-200 text-base md:text-lg font-medium leading-relaxed">
+                        👉 Seret atau ketuk kartu jawaban yang tepat ke dalam kotak target sebelum waktu habis! Kumpulkan skor tertinggi dan temukan semua rahasia cerita rakyat Nusantara.
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center z-10 pb-4">
+                <button onclick="startGame()" class="font-heading text-2xl md:text-3xl font-extrabold text-slate-900 bg-gradient-to-b from-amber-300 to-amber-500 hover:from-amber-200 hover:to-amber-400 active:translate-y-1 border-b-8 border-amber-700 px-10 py-5 rounded-2xl shadow-3d transition-all duration-150 transform hover:scale-105 inline-flex items-center gap-3">
+                    <span>🚀</span> MULAI PETUALANGAN
+                </button>
+            </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- SCREEN 2: GAMEPLAY SCREEN -->
+        <!-- ========================================================================= -->
+        <div id="screen-game" class="w-full h-full flex flex-col justify-between p-4 md:p-6 hidden relative z-10">
+            
+            <!-- Header Bar -->
+            <div class="flex flex-wrap justify-between items-center bg-slate-800/90 border-2 border-slate-700 p-3 md:p-4 rounded-2xl shadow-lg gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-600 border border-indigo-400 text-white font-heading font-bold px-3 py-1.5 rounded-xl text-sm md:text-base">
+                        Ronde <span id="current-round">1</span>/25
+                    </div>
+                </div>
+
+                <div class="flex-1 max-w-xs mx-2">
+                    <div class="flex justify-between text-xs font-bold text-slate-300 mb-1">
+                        <span>⏳ SISA WAKTU</span>
+                        <span id="timer-text" class="text-amber-400 font-mono text-sm">15s</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-3.5 rounded-full p-0.5 border border-slate-700 overflow-hidden">
+                        <div id="timer-bar" class="bg-teal-400 h-full rounded-full w-full"></div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div class="bg-amber-400/10 border border-amber-400/50 text-amber-300 font-heading font-extrabold px-4 py-1.5 rounded-xl text-lg md:text-xl">
+                        🏆 <span id="score-display">0</span>
+                    </div>
+                    <button onclick="toggleAudio()" class="bg-slate-700 hover:bg-slate-600 text-amber-400 p-2 md:p-2.5 rounded-xl border border-slate-600 transition">
+                        <span id="sound-icon-game" class="text-xl">🔊</span>
+                    </button>
+                    <button onclick="confirmExit()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 p-2 md:p-2.5 rounded-xl border border-slate-600 transition" title="Kembali ke Menu">
+                        🏠
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden my-2 border border-slate-700">
+                <div id="overall-progress" class="bg-gradient-to-r from-teal-400 to-amber-400 h-full w-0 transition-all duration-300"></div>
+            </div>
+
+            <!-- Main Question & Target Area -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 my-auto items-center">
+                
+                <div class="lg:col-span-7 bg-slate-800/90 border-2 border-indigo-500/40 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col justify-center min-h-[170px] md:min-h-[200px] relative">
+                    <div class="absolute -top-3 left-6 bg-indigo-600 text-indigo-100 font-bold text-xs uppercase px-3 py-1 rounded-md border border-indigo-400 shadow">
+                        <span id="category-badge">Soal Cerita Rakyat</span>
+                    </div>
+                    <p id="question-text" class="text-base md:text-xl lg:text-2xl font-normal text-slate-100 leading-relaxed font-heading mt-2">
+                        Memuat pertanyaan...
+                    </p>
+                </div>
+
+                <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                    <div id="dropzone" 
+                         ondragover="handleDragOver(event)" 
+                         ondragleave="handleDragLeave(event)" 
+                         ondrop="handleDrop(event)"
+                         onclick="handleDropzoneClick()"
+                         class="w-full min-h-[170px] md:min-h-[200px] border-4 border-dashed border-amber-400/60 bg-amber-500/5 hover:bg-amber-500/10 rounded-2xl flex flex-col items-center justify-center p-4 transition-all duration-200 cursor-pointer text-center relative group">
+                        
+                        <div id="dropzone-prompt" class="flex flex-col items-center pointer-events-none space-y-2">
+                            <div class="w-14 h-14 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                                🎯
+                            </div>
+                            <span class="font-heading font-extrabold text-amber-300 text-base md:text-lg">
+                                TARIK JAWABAN KE SINI
+                            </span>
+                            <span class="text-slate-400 text-xs font-semibold">
+                                (Atau ketuk kartu lalu ketuk kotak ini)
+                            </span>
+                        </div>
+
+                        <div id="dropzone-content" class="hidden w-full h-full flex flex-col items-center justify-center">
+                            <!-- Injected Dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Draggable Options Container -->
+            <div id="options-container" class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-2">
+                <!-- Options injected by JavaScript -->
+            </div>
+
+            <!-- Feedback Modal Popup -->
+            <div id="feedback-toast" class="hidden absolute inset-0 bg-slate-950/80 backdrop-blur-md rounded-3xl flex flex-col items-center justify-center z-50 p-6">
+                <div id="feedback-card" class="bg-slate-800 border-4 border-amber-400 p-6 md:p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-4 animate-pop">
+                    <div id="feedback-icon" class="text-6xl md:text-7xl">🎉</div>
+                    <h2 id="feedback-title" class="font-heading text-3xl md:text-4xl font-extrabold text-amber-300">HEBAT!</h2>
+                    <p id="feedback-message" class="text-slate-200 text-base md:text-lg font-medium">Jawabanmu tepat sekali!</p>
+                    <div id="feedback-points" class="inline-block bg-teal-500/20 text-teal-300 border border-teal-400 font-bold px-4 py-2 rounded-xl text-xl">
+                        +120 Poin
+                    </div>
+                    <div>
+                        <button onclick="nextRound()" class="w-full font-heading text-xl font-bold bg-amber-400 hover:bg-amber-300 text-slate-900 py-3.5 rounded-xl shadow-lg border-b-4 border-amber-600 active:translate-y-0.5 transition">
+                            LANJUTKAN ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- SCREEN 3: VICTORY / EVALUATION SCREEN -->
+        <!-- ========================================================================= -->
+        <div id="screen-result" class="w-full h-full flex flex-col justify-between p-6 md:p-10 hidden relative z-10 overflow-y-auto">
+            
+            <div class="text-center space-y-2">
+                <span class="bg-amber-400/20 text-amber-300 border border-amber-400 font-bold px-4 py-1.5 rounded-full text-sm uppercase tracking-wider">
+                    Petualangan Selesai
+                </span>
+                <h1 class="font-heading text-3xl md:text-5xl font-extrabold text-amber-300">
+                    HASIL PETUALANGAN SASTRA
+                </h1>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+                <div class="bg-slate-800/90 border-2 border-amber-400/50 p-5 rounded-2xl text-center flex flex-col items-center justify-center shadow-lg">
+                    <span class="text-slate-400 font-semibold text-sm">TOTAL SKOR</span>
+                    <span id="final-score" class="font-heading text-4xl md:text-5xl font-extrabold text-amber-400 my-1">0</span>
+                    <span id="final-badge" class="text-xs bg-amber-500/20 text-amber-300 font-bold px-3 py-1 rounded-md border border-amber-400/30">
+                        Maestro Sastra
+                    </span>
+                </div>
+
+                <div class="bg-slate-800/90 border-2 border-teal-400/50 p-5 rounded-2xl text-center flex flex-col items-center justify-center shadow-lg">
+                    <span class="text-slate-400 font-semibold text-sm">AKURASI JAWABAN</span>
+                    <span id="final-accuracy" class="font-heading text-4xl md:text-5xl font-extrabold text-teal-300 my-1">0%</span>
+                    <span id="final-correct-count" class="text-xs text-slate-300 font-semibold">
+                        0 dari 25 Soal Benar
+                    </span>
+                </div>
+
+                <div class="bg-slate-800/90 border-2 border-indigo-400/50 p-5 rounded-2xl text-center flex flex-col items-center justify-center shadow-lg">
+                    <span class="text-slate-400 font-semibold text-sm">RATAAN KECEPATAN</span>
+                    <span id="final-avg-time" class="font-heading text-4xl md:text-5xl font-extrabold text-indigo-300 my-1">0s</span>
+                    <span class="text-xs text-slate-300 font-semibold">
+                        Per Tantangan
+                    </span>
+                </div>
+            </div>
+
+            <div id="eval-box" class="bg-slate-800/70 border border-slate-700 p-4 md:p-5 rounded-2xl space-y-3">
+                <h3 class="font-heading text-lg font-bold text-teal-300 flex items-center gap-2">
+                    💡 Evaluasi Pembelajaran Sastra
+                </h3>
+                <p id="eval-text" class="text-slate-300 text-sm leading-relaxed">
+                    Kerja bagus! Kamu telah menyelesaikan seluruh tantangan cerita rakyat dan pemahaman makna kata konotasi & denotasi.
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+                <button onclick="restartGame()" class="font-heading text-xl font-bold text-slate-900 bg-amber-400 hover:bg-amber-300 px-8 py-4 rounded-2xl shadow-3d border-b-4 border-amber-600 transition flex items-center justify-center gap-2">
+                    🔄 MAIN LAGI (ACAK SOAL)
+                </button>
+                <button onclick="showHomeScreen()" class="font-heading text-xl font-bold text-slate-100 bg-slate-700 hover:bg-slate-600 px-8 py-4 rounded-2xl shadow-lg border border-slate-500 transition flex items-center justify-center gap-2">
+                    🏠 MENU UTAMA
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        /* =========================================================================
+         * 1. QUESTION BANK (25 UNIQUE EDUSPEC-COMPLIANT QUESTIONS)
+         * ========================================================================= */
+        const originalQuestionBank = [
+            // A. Pengertian & Ciri Cerita Rakyat
+            {
+                id: 1,
+                category: "Pengertian & Ciri",
+                question: "Cerita rakyat yang tokoh utamanya adalah hewan yang berperilaku dan berbicara seperti manusia disebut...",
+                answer: "FABEL",
+                options: ["FABEL", "LEGENDA", "MITE", "SAGE"]
+            },
+            {
+                id: 2,
+                category: "Pengertian & Ciri",
+                question: "Cerita rakyat yang mengisahkan asal-usul terjadinya suatu tempat, danau, atau gunung dinamakan...",
+                answer: "LEGENDA",
+                options: ["LEGENDA", "DONGENG", "MITE", "CERITA JENAKA"]
+            },
+            {
+                id: 3,
+                category: "Pengertian & Ciri",
+                question: "Cerita rakyat yang dianggap suci dan berhubungan dengan dewa-dewi atau roh halus dinamakan...",
+                answer: "MITE",
+                options: ["MITE", "SAGE", "FABEL", "LEGENDA"]
+            },
+            {
+                id: 4,
+                category: "Pengertian & Ciri",
+                question: "Cerita rakyat yang mengisahkan kepahlawanan, keberanian, atau kesaktian seorang tokoh sejarah dinamakan...",
+                answer: "SAGE",
+                options: ["SAGE", "DONGENG", "FABEL", "CERITA JENAKA"]
+            },
+            {
+                id: 5,
+                category: "Pengertian & Ciri",
+                question: "Cerita rekaan khayalan murni tanpa terikat sejarah atau kebenaran ilmiah disebut...",
+                answer: "DONGENG",
+                options: ["DONGENG", "MITE", "SAGE", "LEGENDA"]
+            },
+            {
+                id: 6,
+                category: "Pengertian & Ciri",
+                question: "Cerita rakyat yang memuat kisah lucu dan menghibur akibat kebodohan atau kecerdikan tokohnya dinamakan...",
+                answer: "CERITA JENAKA",
+                options: ["CERITA JENAKA", "FABEL", "SAGE", "DONGENG"]
+            },
+
+            // B. Analisis Potongan Cerita Singkat
+            {
+                id: 7,
+                category: "Analisis Cerita",
+                question: 'Tentukan jenis cerita rakyat berikut:\n"Kancil menipu Sang Buaya agar berbaris rapi sehingga Kancil bisa menyeberangi sungai dengan melompati punggung mereka."',
+                answer: "FABEL",
+                options: ["FABEL", "LEGENDA", "CERITA JENAKA", "MITE"]
+            },
+            {
+                id: 8,
+                category: "Analisis Cerita",
+                question: 'Tentukan jenis cerita rakyat berikut:\n"Gunung Tangkuban Perahu tercipta karena Sangkuriang menendang perahu raksasa hingga terbalik karena marah."',
+                answer: "LEGENDA",
+                options: ["LEGENDA", "SAGE", "DONGENG", "MITE"]
+            },
+            {
+                id: 9,
+                category: "Analisis Cerita",
+                question: 'Tentukan jenis cerita rakyat berikut:\n"Nyai Roro Kidul dipercaya masyarakat pesisir selatan sebagai penguasa laut yang memiliki kekuatan gaib sakral."',
+                answer: "MITE",
+                options: ["MITE", "CERITA JENAKA", "FABEL", "LEGENDA"]
+            },
+            {
+                id: 10,
+                category: "Analisis Cerita",
+                question: 'Tentukan jenis cerita rakyat berikut:\n"Pangeran Diponegoro memimpin pasukan dengan gagah berani melawan penjajah di bumi Pertiwi."',
+                answer: "SAGE",
+                options: ["SAGE", "DONGENG", "MITE", "FABEL"]
+            },
+            {
+                id: 11,
+                category: "Analisis Cerita",
+                question: 'Tentukan jenis cerita rakyat berikut:\n"Si Kabayan diminta mertuanya memetik nangka, namun ia justru menyuruh nangka itu hanyut dan pulang sendiri di sungai."',
+                answer: "CERITA JENAKA",
+                options: ["CERITA JENAKA", "LEGENDA", "FABEL", "SAGE"]
+            },
+            {
+                id: 12,
+                category: "Analisis Cerita",
+                question: 'Tentukan jenis cerita rakyat berikut:\n"Putri Cendana hidup bahagia bersama peri bunga ajaib di negeri impian yang ada di atas awan."',
+                answer: "DONGENG",
+                options: ["DONGENG", "LEGENDA", "MITE", "SAGE"]
+            },
+
+            // C. Variasi Kata Kiasan & Arti Sebenarnya
+            {
+                id: 13,
+                category: "Arti Kata Kiasan",
+                question: 'Kata kiasan "panjang tangan" memiliki arti sebenarnya yaitu...',
+                answer: "Suka mencuri",
+                options: ["Suka mencuri", "Tangannya panjang", "Rajin bekerja", "Suka menolong"]
+            },
+            {
+                id: 14,
+                category: "Arti Kata Kiasan",
+                question: 'Kata kiasan "buah tangan" memiliki arti sebenarnya yaitu...',
+                answer: "Oleh-oleh",
+                options: ["Oleh-oleh", "Buah petikan tangan", "Anak kandung", "Hasil kerja"]
+            },
+            {
+                id: 15,
+                category: "Arti Kata Kiasan",
+                question: 'Kata kiasan "anak emas" memiliki arti sebenarnya yaitu...',
+                answer: "Anak kesayangan",
+                options: ["Anak kesayangan", "Anak berbaju emas", "Anak kaya raya", "Anak tertua"]
+            },
+            {
+                id: 16,
+                category: "Arti Kata Kiasan",
+                question: 'Kata kiasan "gulung tikar" memiliki arti sebenarnya yaitu...',
+                answer: "Bangkrut atau mengalami kerugian",
+                options: ["Bangkrut atau mengalami kerugian", "Merapikan tempat tidur", "Pindah rumah", "Menutup jendela"]
+            },
+            {
+                id: 17,
+                category: "Arti Kata Kiasan",
+                question: 'Kata kiasan "kepala dingin" memiliki arti sebenarnya yaitu...',
+                answer: "Tenang dan bersabar",
+                options: ["Tenang dan bersabar", "Kepala terkena es", "Sedang sakit demam", "Suka marah"]
+            },
+            {
+                id: 18,
+                category: "Arti Kata Kiasan",
+                question: 'Kata kiasan "tangan kanan" memiliki arti sebenarnya yaitu...',
+                answer: "Orang kepercayaan",
+                options: ["Orang kepercayaan", "Tangan sebelah kanan", "Suka memukul", "Teman sebaya"]
+            },
+
+            // D. Kalimat Konotasi vs Denotasi
+            {
+                id: 19,
+                category: "Konotasi & Denotasi",
+                question: "Makna kata atau kalimat yang sesuai dengan arti sebenarnya tanpa kiasan disebut makna...",
+                answer: "DENOTASI",
+                options: ["DENOTASI", "KONOTASI", "KIASAN", "LUGAS"]
+            },
+            {
+                id: 20,
+                category: "Konotasi & Denotasi",
+                question: "Makna kata atau kalimat yang mengandung kiasan atau nilai rasa tambahan disebut makna...",
+                answer: "KONOTASI",
+                options: ["KONOTASI", "DENOTASI", "LUGAS", "OBJEKTIF"]
+            },
+            {
+                id: 21,
+                category: "Konotasi & Denotasi",
+                question: '"Adik sedang mencuci tangan kanan dengan sabun hingga bersih sebelum makan."\n\nKalimat tersebut termasuk dalam kalimat bermakna...',
+                answer: "DENOTASI",
+                options: ["DENOTASI", "KONOTASI", "KIASAN", "SAMPINGAN"]
+            },
+            {
+                id: 22,
+                category: "Konotasi & Denotasi",
+                question: '"Raja itu panjang tangan sehingga tidak disukai oleh rakyatnya."\n\nKalimat tersebut termasuk dalam kalimat bermakna...',
+                answer: "KONOTASI",
+                options: ["KONOTASI", "DENOTASI", "LUGAS", "AKURAT"]
+            },
+            {
+                id: 23,
+                category: "Konotasi & Denotasi",
+                question: "Kalimat berikut yang mengandung makna KONOTASI adalah...",
+                answer: "Ibu membawa buah tangan berupa kue lezat setelah pulang dari luar kota.",
+                options: [
+                    "Ibu membawa buah tangan berupa kue lezat setelah pulang dari luar kota.",
+                    "Ibu membeli buah apel segar di pasar tradisional pagi ini.",
+                    "Tangan kanan Budi tergores pensil saat sedang menggambar.",
+                    "Pohon mangga di pekarangan itu menghasilkan buah manis."
+                ]
+            },
+            {
+                id: 24,
+                category: "Konotasi & Denotasi",
+                question: "Kalimat berikut yang mengandung makna DENOTASI adalah...",
+                answer: "Pohon mangga di pekarangan rumah itu menghasilkan buah yang sangat manis.",
+                options: [
+                    "Pohon mangga di pekarangan rumah itu menghasilkan buah yang sangat manis.",
+                    "Ayah selalu membawakan buah tangan berupa makanan khas ketika pulang kerja.",
+                    "Anak itu dikenal sebagai anak emas di dalam keluarga besarnya.",
+                    "Pria itu dikenal panjang tangan di lingkungan tempat tinggalnya."
+                ]
+            },
+            {
+                id: 25,
+                category: "Konotasi & Denotasi",
+                question: '"Siti selalu bersikap rendah hati kepada siapa saja meskipun ia anak pengusaha sukses."\n\nKalimat tersebut termasuk dalam kalimat bermakna...',
+                answer: "KONOTASI",
+                options: ["KONOTASI", "DENOTASI", "LUGAS", "OBJEKTIF"]
+            }
+        ];
+
+        /* =========================================================================
+         * 2. GAME STATE VARIABLES
+         * ========================================================================= */
+        let shuffledQuestions = [];
+        let currentRoundIndex = 0;
+        let score = 0;
+        let correctAnswersCount = 0;
+        let totalTimeSpent = 0;
+        let timerInterval = null;
+        let timeLeft = 15;
+        let selectedOptionTap = null;
+        let isAudioMuted = false;
+        let isAnsweringBlocked = false;
+
+        /* =========================================================================
+         * 3. SYNTHESIZED WEB AUDIO API SOUND ENGINE
+         * ========================================================================= */
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (isAudioMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            try {
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } 
+                else if (type === 'drag') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(500, now + 0.05);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                }
+                else if (type === 'correct') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.08);
+                        osc.stop(now + idx * 0.08 + 0.25);
+                    });
+                } 
+                else if (type === 'wrong') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.3);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+                else if (type === 'tick') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0.001, now + 0.03);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.03);
+                }
+                else if (type === 'victory') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    freqs.forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        gain.gain.setValueAtTime(0.25, now + idx * 0.12);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.12);
+                        osc.stop(now + idx * 0.12 + 0.4);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const icon = isAudioMuted ? '🔇' : '🔊';
+            document.getElementById('sound-icon-home').innerText = icon;
+            document.getElementById('sound-icon-game').innerText = icon;
+        }
+
+        /* =========================================================================
+         * 4. UTILITY & GAMEPLAY LOOP
+         * ========================================================================= */
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startGame() {
+            initAudio();
+            playSound('click');
+
+            score = 0;
+            correctAnswersCount = 0;
+            totalTimeSpent = 0;
+            currentRoundIndex = 0;
+            
+            shuffledQuestions = shuffleArray(originalQuestionBank).map(q => ({
+                ...q,
+                options: shuffleArray(q.options)
+            }));
+
+            document.getElementById('screen-home').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            loadRound();
+        }
+
+        function loadRound() {
+            if (currentRoundIndex >= shuffledQuestions.length) {
+                endGame();
+                return;
+            }
+
+            isAnsweringBlocked = false;
+            selectedOptionTap = null;
+
+            const q = shuffledQuestions[currentRoundIndex];
+
+            document.getElementById('current-round').innerText = currentRoundIndex + 1;
+            document.getElementById('score-display').innerText = score;
+
+            const progressPercent = ((currentRoundIndex) / shuffledQuestions.length) * 100;
+            document.getElementById('overall-progress').style.width = `${progressPercent}%`;
+
+            document.getElementById('category-badge').innerText = q.category;
+            document.getElementById('question-text').innerText = q.question;
+
+            const dropzone = document.getElementById('dropzone');
+            dropzone.className = "w-full min-h-[170px] md:min-h-[200px] border-4 border-dashed border-amber-400/60 bg-amber-500/5 hover:bg-amber-500/10 rounded-2xl flex flex-col items-center justify-center p-4 transition-all duration-200 cursor-pointer text-center relative group";
+            document.getElementById('dropzone-prompt').classList.remove('hidden');
+            document.getElementById('dropzone-content').classList.add('hidden');
+            document.getElementById('dropzone-content').innerHTML = '';
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            // Render 4 Options dynamically adjusting text size based on option length
+            q.options.forEach((optText) => {
+                const isSentenceOption = optText.length > 20;
+                const card = document.createElement('div');
+                card.className = `draggable-card bg-slate-800 border-2 border-teal-400/60 hover:border-teal-400 bg-gradient-to-b from-slate-800 to-slate-900 p-3 md:p-4 rounded-2xl shadow-lg flex items-center justify-center text-center font-heading font-bold ${isSentenceOption ? 'text-xs md:text-sm lg:text-base leading-snug' : 'text-lg md:text-xl lg:text-2xl'} text-teal-200 active:scale-95 transition-all select-none`;
+                card.innerText = optText;
+                card.setAttribute('draggable', 'true');
+                card.dataset.value = optText;
+
+                card.addEventListener('dragstart', (e) => handleDragStart(e, optText));
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('click', () => handleOptionTap(card, optText));
+
+                optionsContainer.appendChild(card);
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 15;
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                totalTimeSpent++;
+                updateTimerUI();
+
+                if (timeLeft <= 3 && timeLeft > 0) {
+                    playSound('tick');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeOut();
+                }
+            }, 1000);
+        }
+
+        function updateTimerUI() {
+            const timerBar = document.getElementById('timer-bar');
+            const timerText = document.getElementById('timer-text');
+            const percentage = (timeLeft / 15) * 100;
+
+            timerText.innerText = `${timeLeft}s`;
+            timerBar.style.width = `${percentage}%`;
+
+            if (timeLeft > 7) {
+                timerBar.className = "bg-teal-400 h-full rounded-full w-full";
+            } else if (timeLeft > 3) {
+                timerBar.className = "bg-amber-400 h-full rounded-full w-full";
+            } else {
+                timerBar.className = "bg-rose-500 h-full rounded-full w-full animate-pulse";
+            }
+        }
+
+        /* =========================================================================
+         * 5. DRAG & DROP & TOUCH HANDLERS
+         * ========================================================================= */
+        let draggedValue = null;
+
+        function handleDragStart(e, val) {
+            if (isAnsweringBlocked) return;
+            draggedValue = val;
+            e.dataTransfer.setData('text/plain', val);
+            e.target.classList.add('dragging');
+            playSound('drag');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const dropzone = document.getElementById('dropzone');
+            dropzone.classList.add('dropzone-active');
+        }
+
+        function handleDragLeave(e) {
+            const dropzone = document.getElementById('dropzone');
+            dropzone.classList.remove('dropzone-active');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropzone = document.getElementById('dropzone');
+            dropzone.classList.remove('dropzone-active');
+
+            if (isAnsweringBlocked) return;
+            const val = e.dataTransfer.getData('text/plain') || draggedValue;
+            if (val) {
+                processAnswer(val);
+            }
+        }
+
+        function handleOptionTap(cardElement, optText) {
+            if (isAnsweringBlocked) return;
+            playSound('click');
+
+            document.querySelectorAll('.draggable-card').forEach(c => {
+                c.classList.remove('selected-tap');
+            });
+
+            if (selectedOptionTap === optText) {
+                selectedOptionTap = null;
+            } else {
+                selectedOptionTap = optText;
+                cardElement.classList.add('selected-tap');
+            }
+        }
+
+        function handleDropzoneClick() {
+            if (isAnsweringBlocked) return;
+            if (selectedOptionTap) {
+                processAnswer(selectedOptionTap);
+            }
+        }
+
+        /* =========================================================================
+         * 6. EVALUATION, SCORING & END GAME
+         * ========================================================================= */
+        function processAnswer(userAnswer) {
+            isAnsweringBlocked = true;
+            clearInterval(timerInterval);
+
+            const q = shuffledQuestions[currentRoundIndex];
+            const isCorrect = (userAnswer === q.answer);
+
+            const dropzonePrompt = document.getElementById('dropzone-prompt');
+            const dropzoneContent = document.getElementById('dropzone-content');
+            
+            dropzonePrompt.classList.add('hidden');
+            dropzoneContent.classList.remove('hidden');
+
+            const isSentenceAnswer = userAnswer.length > 25;
+            const displayUserText = isSentenceAnswer ? `"${userAnswer.substring(0, 35)}..."` : userAnswer;
+            const displayCorrectText = q.answer.length > 25 ? `"${q.answer.substring(0, 35)}..."` : q.answer;
+
+            if (isCorrect) {
+                playSound('correct');
+                correctAnswersCount++;
+
+                // Kalkulasi poin mutlak berdasarkan rentang kecepatan menjawab:
+                // Sisa waktu 15s - 8s berarti menjawab dalam 1-7 detik (+150 poin)
+                // Sisa waktu 7s - 0s berarti menjawab dalam 8-15 detik (+100 poin)
+                let earnedPoints = 0;
+                let speedLabel = "";
+
+                if (timeLeft >= 8) {
+                    earnedPoints = 150;
+                    speedLabel = "1–7 detik";
+                } else {
+                    earnedPoints = 100;
+                    speedLabel = "8–15 detik";
+                }
+
+                score += earnedPoints;
+
+                dropzoneContent.innerHTML = `
+                    <div class="font-heading text-lg md:text-xl font-extrabold text-emerald-400 mb-1 animate-pop px-2">
+                        ✅ ${displayUserText}
+                    </div>
+                    <span class="text-xs text-emerald-300 font-bold bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/40">
+                        +${earnedPoints} Poin (${speedLabel})
+                    </span>
+                `;
+
+                try {
+                    confetti({
+                        particleCount: 60,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+                } catch(e){}
+
+                showToastFeedback(true, "LUAAR BIASA!", `Jawabanmu Tepat Sekali! (${speedLabel})`, earnedPoints);
+
+            } else {
+                playSound('wrong');
+
+                const dropzone = document.getElementById('dropzone');
+                dropzone.classList.add('animate-shake', 'border-rose-500', 'bg-rose-500/10');
+
+                dropzoneContent.innerHTML = `
+                    <div class="font-heading text-lg md:text-xl font-extrabold text-rose-400 mb-1 px-2">
+                        ❌ ${displayUserText}
+                    </div>
+                    <span class="text-xs text-rose-300 font-bold bg-rose-950/80 px-3 py-1 rounded-full border border-rose-500/40">
+                        Jawaban Tepat: ${displayCorrectText}
+                    </span>
+                `;
+
+                showToastFeedback(false, "OOPS, KURANG TEPAT!", `Jawaban yang benar: ${q.answer}`, 0);
+            }
+        }
+
+        function handleTimeOut() {
+            isAnsweringBlocked = true;
+            playSound('wrong');
+
+            const q = shuffledQuestions[currentRoundIndex];
+            const dropzonePrompt = document.getElementById('dropzone-prompt');
+            const dropzoneContent = document.getElementById('dropzone-content');
+
+            dropzonePrompt.classList.add('hidden');
+            dropzoneContent.classList.remove('hidden');
+
+            dropzoneContent.innerHTML = `
+                <div class="font-heading text-xl font-extrabold text-amber-400 mb-1">
+                    ⏰ WAKTU HABIS!
+                </div>
+                <span class="text-xs text-amber-300 font-bold bg-amber-950/80 px-3 py-1 rounded-full border border-amber-500/40">
+                    Jawaban Tepat: ${q.answer}
+                </span>
+            `;
+
+            showToastFeedback(false, "WAKTU HABIS!", `Waktu 15 detik telah habis. Jawaban yang benar: ${q.answer}`, 0);
+        }
+
+        function showToastFeedback(isCorrect, title, message, points) {
+            const toast = document.getElementById('feedback-toast');
+            const icon = document.getElementById('feedback-icon');
+            const titleEl = document.getElementById('feedback-title');
+            const msgEl = document.getElementById('feedback-message');
+            const pointsEl = document.getElementById('feedback-points');
+            const cardEl = document.getElementById('feedback-card');
+
+            if (isCorrect) {
+                icon.innerText = "🎉";
+                titleEl.className = "font-heading text-3xl md:text-4xl font-extrabold text-emerald-400";
+                cardEl.className = "bg-slate-800 border-4 border-emerald-400 p-6 md:p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-4 animate-pop";
+                pointsEl.className = "inline-block bg-emerald-500/20 text-emerald-300 border border-emerald-400 font-bold px-4 py-2 rounded-xl text-xl";
+                pointsEl.innerText = `+${points} Poin`;
+            } else {
+                icon.innerText = "💡";
+                titleEl.className = "font-heading text-3xl md:text-4xl font-extrabold text-rose-400";
+                cardEl.className = "bg-slate-800 border-4 border-rose-400 p-6 md:p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-4 animate-shake";
+                pointsEl.className = "inline-block bg-rose-500/20 text-rose-300 border border-rose-400 font-bold px-4 py-2 rounded-xl text-xl";
+                pointsEl.innerText = `0 Poin`;
+            }
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+
+            setTimeout(() => {
+                toast.classList.remove('hidden');
+            }, 400);
+        }
+
+        function nextRound() {
+            playSound('click');
+            document.getElementById('feedback-toast').classList.add('hidden');
+            currentRoundIndex++;
+            loadRound();
+        }
+
+        function endGame() {
+            playSound('victory');
+            clearInterval(timerInterval);
+
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+
+            const totalQuestions = shuffledQuestions.length;
+            const accuracy = Math.round((correctAnswersCount / totalQuestions) * 100);
+            const avgTime = (totalTimeSpent / totalQuestions).toFixed(1);
+
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-accuracy').innerText = `${accuracy}%`;
+            document.getElementById('final-correct-count').innerText = `${correctAnswersCount} dari ${totalQuestions} Soal Benar`;
+            document.getElementById('final-avg-time').innerText = `${avgTime}s`;
+
+            const badgeEl = document.getElementById('final-badge');
+            const evalTextEl = document.getElementById('eval-text');
+
+            if (accuracy >= 90) {
+                badgeEl.innerText = "👑 MAESTRO SASTRA NUSANTARA";
+                badgeEl.className = "text-xs bg-amber-500/20 text-amber-300 font-bold px-3 py-1 rounded-md border border-amber-400/50";
+                evalTextEl.innerHTML = "Sempurna! Kamu memiliki pemahaman yang luar biasa tinggi terhadap jenis-jenis cerita rakyat (Fabel, Legenda, Mite, Sage, Dongeng, Cerita Jenaka) serta mampu menganalisis makna kata Konotasi & Denotasi secara sangat akurat!";
+            } else if (accuracy >= 70) {
+                badgeEl.innerText = "📜 PENJELAJAH CERITA SEJATI";
+                badgeEl.className = "text-xs bg-teal-500/20 text-teal-300 font-bold px-3 py-1 rounded-md border border-teal-400/50";
+                evalTextEl.innerHTML = "Sangat Baik! Pemahamanmu mengenai karya sastra cerita rakyat dan makna kata konotasi-denotasi sudah bagus. Tingkatkan sedikit lagi ketelitianmu saat membedakan mite, sage, dan cerita jenaka!";
+            } else {
+                badgeEl.innerText = "🌱 PEMBELAJAR SASTRA MUDA";
+                badgeEl.className = "text-xs bg-indigo-500/20 text-indigo-300 font-bold px-3 py-1 rounded-md border border-indigo-400/50";
+                evalTextEl.innerHTML = "Usaha yang bagus! Mari baca kembali pengertian jenis cerita rakyat (terutama perbedaan Fabel, Mite, dan Sage) serta contoh kata kiasan (konotasi) dan kata sebenarnya (denotasi), lalu coba lagi ya!";
+            }
+
+            try {
+                confetti({
+                    particleCount: 120,
+                    spread: 100,
+                    origin: { y: 0.5 }
+                });
+            } catch(e){}
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function showHomeScreen() {
+            playSound('click');
+            clearInterval(timerInterval);
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            document.getElementById('screen-home').classList.remove('hidden');
+        }
+
+        function confirmExit() {
+            if (confirm("Apakah kamu yakin ingin menghentikan permainan dan kembali ke menu awal?")) {
+                showHomeScreen();
+            }
+        }
+    </script>
+</body>
+</html>
